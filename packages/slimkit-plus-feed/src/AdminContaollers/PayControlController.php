@@ -36,7 +36,7 @@ class PayControlController extends Controller
         $textLength = $config->get('feed.limit') ?? 50;
 
         foreach ($items as $key => $value) {
-            $items[$key] = $value / 100;
+            $items[$key] = $value;
         }
 
         return response()->json([
@@ -58,7 +58,7 @@ class PayControlController extends Controller
         if ($paycontrol) {
             $paycontrol = explode(',', $paycontrol);
             foreach ($paycontrol as $key => $item) {
-                $paycontrol[$key] = $item * 100;
+                $paycontrol[$key] = $item;
             }
         }
 

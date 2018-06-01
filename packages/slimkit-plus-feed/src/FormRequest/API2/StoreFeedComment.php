@@ -20,6 +20,8 @@ declare(strict_types=1);
 
 namespace Zhiyi\Component\ZhiyiPlus\PlusComponentFeed\FormRequest\API2;
 
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreFeedComment extends FormRequest
@@ -46,6 +48,9 @@ class StoreFeedComment extends FormRequest
         return [
             'reply_user' => ['nullable', 'integer', 'exists:users,id'],
             'body' => ['required', 'string', 'display_length:255'],
+            'comment_mark' => [
+                Rule::notIn([Cache::get('comment_mark_'.$this->input('comment_mark'))]),
+            ],
         ];
     }
 

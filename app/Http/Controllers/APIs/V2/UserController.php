@@ -42,7 +42,7 @@ class UserController extends Controller
      */
     public function index(Request $request, ResponseFactoryContract $response, User $model)
     {
-        $user = $request->user('api') ?: 0;
+        $user = $request->user('api');
         $ids = array_filter(explode(',', $request->query('id', '')));
         $limit = max(min($request->query('limit', 15), 50), 1);
         $order = in_array($order = $request->query('order', 'desc'), ['asc', 'desc']) ? $order : 'desc';
@@ -54,15 +54,16 @@ class UserController extends Controller
         })->when($name, function ($query) use ($name) {
             return $query->where('name', 'like', sprintf('%%%s%%', $name));
         })->when(! empty($ids), function ($query) use ($ids) {
-            return $query->whereIn('id', $ids);
+            return $query->whereIn('id', $ids)->withTrashed();
         })->limit($limit)
           ->orderby('id', $order)
           ->get();
 
         return $response->json($model->getConnection()->transaction(function () use ($users, $user) {
             return $users->map(function (User $item) use ($user) {
-                $item->following = $item->hasFollwing($user);
-                $item->follower = $item->hasFollower($user);
+                $item->following = $item->hasFollwing($user->id ?? 0);
+                $item->follower = $item->hasFollower($user->id ?? 0);
+                $item->blacked = $user ? $user->blacked($item) : false;
 
                 return $item;
             });
@@ -77,12 +78,18 @@ class UserController extends Controller
      * @return mixed
      * @author Seven Du <shiweidu@outlook.com>
      */
-    public function show(Request $request, User $user)
+    public function show(Request $request, int $user)
     {
+        $user = User::withTrashed()
+            ->where('id', $user)
+            ->firstOrFail();
+
         // 我关注的处理
         $this->hasFollowing($request, $user);
         // 处理关注我的
         $this->hasFollower($request, $user);
+        // 处理黑名单
+        $this->hasBlacked($request, $user);
 
         return response()->json($user, 200);
     }
@@ -125,7 +132,7 @@ class UserController extends Controller
 
         $verify->delete();
         if (! $user->save()) {
-            return $response->json(['message' => ['注册失败']], 500);
+            return $response->json(['message' => '注册失败'], 500);
         }
 
         $user->roles()->sync($role->value);
@@ -165,5 +172,11 @@ class UserController extends Controller
         $currentUser = $request->user('api');
         $hasUser = (int) $request->query('follower', $currentUser ? $currentUser->id : 0);
         $user['follower'] = $user->hasFollower($hasUser);
+    }
+
+    protected function hasBlacked(Request $request, User &$user)
+    {
+        $currentUser = $request->user('api');
+        $user['blacked'] = $currentUser ? $currentUser->blacked($user) : false;
     }
 }

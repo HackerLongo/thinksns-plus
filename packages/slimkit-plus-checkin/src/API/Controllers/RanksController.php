@@ -43,8 +43,11 @@ class RanksController extends Controller
         $limit = $request->query('limit', 10);
         $offset = max(0, $request->query('offset', 0));
 
-        $users = $model->with('user')
+        $users = $model->with(['user' => function ($query) {
+            return $query->withTrashed();
+        }])
             ->orderBy('checkin_count', 'desc')
+            ->orderBy('updated_at', 'desc')
             ->offset($offset)
             ->limit($limit)
             ->get()

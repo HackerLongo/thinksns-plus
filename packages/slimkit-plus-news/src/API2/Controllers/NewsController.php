@@ -45,6 +45,9 @@ class NewsController extends Controller
         $cate_id = $request->query('cate_id');
 
         $news = $newsModel->where('audit_status', 0)
+        ->whereDoesntHave('blacks', function ($query) use ($user) {
+            $query->where('user_id', $user);
+        })
         ->when($is_recommend, function ($query) use ($is_recommend) {
             return $query->where('is_recommend', $is_recommend);
         })
@@ -89,7 +92,9 @@ class NewsController extends Controller
             return $query->where('news.cate_id', $cate);
         })
         ->select(['news.id', 'news.title', 'news.subject', 'news.created_at', 'news.updated_at', 'news.storage', 'news.cate_id', 'news.from', 'news.author', 'news.user_id', 'news.hits', 'news.text_content'])
-        ->orderBy('id', 'desc')->get();
+        ->orderBy('news_pinneds.amount', 'desc')
+        ->orderBy('news_pinneds.created_at', 'desc')
+        ->get();
 
         return response()->json($newsModel->getConnection()->transaction(function () use ($news, $user) {
             return $news->each(function ($data) use ($user) {

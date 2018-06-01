@@ -125,6 +125,13 @@ return [
     'cipher' => 'AES-256-CBC',
 
     /*
+     |
+     | 每页数据条数
+     |
+     */
+    'data_limit' => abs(env('DATA_LIMIT')) ? abs(env('DATA_LIMIT')) : 15,
+
+    /*
     |--------------------------------------------------------------------------
     | Autoloaded Service Providers
     |--------------------------------------------------------------------------
@@ -177,6 +184,7 @@ return [
         Zhiyi\Plus\Providers\EventServiceProvider::class,
         Zhiyi\Plus\Providers\RouteServiceProvider::class,
         Zhiyi\Plus\Providers\NotificationServiceProvider::class,
+        Zhiyi\Plus\Providers\EloquentServiceProvider::class,
 
     ],
 

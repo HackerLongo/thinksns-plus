@@ -59,9 +59,8 @@ class UserCommentController extends Controller
         if ($user->unreadCount !== null) {
             $user->unreadCount()->decrement('unread_comments_count', $user->unreadCount->unread_comments_count);
         }
-
-        return $model->getConnection()->transaction(function () use ($comments, $response) {
-            return $response->json($comments, 200);
-        });
+//        return $model->getConnection()->transaction(function () use ($comments, $response) {
+        return $response->json($comments, 200);
+//        });
     }
 }

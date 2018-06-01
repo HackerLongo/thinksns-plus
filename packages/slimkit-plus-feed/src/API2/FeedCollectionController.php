@@ -42,12 +42,12 @@ class FeedCollectionController extends Controller
         $user = $request->user()->id;
 
         if ($feed->collected($user)) {
-            return $response->json(['message' => ['已经收藏过']])->setStatusCode(422);
+            return $response->json(['message' => '已经收藏过'])->setStatusCode(422);
         }
 
         $feed->collect($user);
 
-        return $response->json(['message' => ['收藏成功']])->setStatusCode(201);
+        return $response->json(['message' => '收藏成功'])->setStatusCode(201);
     }
 
     /**
@@ -82,7 +82,10 @@ class FeedCollectionController extends Controller
             'pinnedComments' => function ($query) {
                 return $query->limit(5);
             },
-            'user',
+            // 需要获取软删除用户
+            'user' => function ($query) {
+                return $query->withTrashed();
+            },
         ])
         ->select('feeds.*')
         ->orderBy('feed_collections.created_at', 'desc')
